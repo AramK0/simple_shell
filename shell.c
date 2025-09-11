@@ -111,15 +111,18 @@ int shell_launch(char **args){
 int sh_cd(char **args);
 int sh_help(char **args);
 int sh_exit(char **args);
+int sh_cwd(char **args);
+
 
 // an array of string pointers , an array of pointers to char
 char *builtin_str[] = {
     "cd",
     "help",
+    "pwd",
     "exit"
 };
 
-int (*builtin_func[])(char **) = {&sh_cd, &sh_help, &sh_exit};
+int (*builtin_func[])(char **) = {&sh_cd, &sh_help, &sh_cwd, &sh_exit};
 
 int sh_num_built_ins(){
     return sizeof(builtin_str) / sizeof(char *);
@@ -162,7 +165,7 @@ void shell_loop(){
         free(line);
         free(args);
     
-
+    // keeps running until 0 is returned, status != 0
     }while(status);
 
     
@@ -190,6 +193,7 @@ int sh_cd(char **args){
     }
     else{
         printf("Moved to %s \n", args[1]);
+        printf("/%s>", args[1]);
 
 
     }
@@ -197,6 +201,20 @@ int sh_cd(char **args){
     
     return 1;
 }
+
+int sh_cwd(char **args){
+    char buffer[1024];
+
+    if(getcwd(buffer, sizeof(buffer)) != NULL){
+        printf("The current dir is: %s\n", buffer);
+    }
+    else{
+        perror("error happend in sh_cwd()\n");
+        return 1;
+    }
+    return 1;
+}
+
 int sh_help(char **args){
     int i;
     printf("Aram's experimental shell\n");
