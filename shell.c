@@ -180,14 +180,21 @@ int main(int argc, char **argv){
 }
 // we pass it a pointer to other pointers that point to portions of the string we tokenized 
 int sh_cd(char **args){
+    chdir(args[1]);
     if(args[1] == NULL){
         fprintf(stderr, "sh_cd: Expected arguement to cd into\n");
 
     }
-    else{
-        chdir(args[1]);
-        printf("Moved to %s \n", args[1]);
+    else if(chdir(args[1]) != 0){
+        fprintf(stderr, "Invalid directory or does not exist.\n");
     }
+    else{
+        printf("Moved to %s \n", args[1]);
+
+
+    }
+        
+    
     return 1;
 }
 int sh_help(char **args){
