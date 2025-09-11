@@ -1,0 +1,209 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <unistd.h>
+#include <sys/types.h>
+#include <sys/wait.h>
+
+#define MAX_SIZE 1064
+
+
+
+// cant be void and not return anything we need to return the pointer 
+char *read_line(){
+    int ch, i = 0;
+    int size = MAX_SIZE;
+    char *buffer = malloc(size * sizeof(char));
+    if(!buffer){
+        fprintf(stderr, "Allocation failed\n");
+        exit(EXIT_FAILURE);
+    }
+
+    while((ch = getchar()) != '\n'){
+
+        buffer[i++] = ch;
+
+
+        if(i >= size){
+            size += MAX_SIZE;
+            buffer = realloc(buffer, size * sizeof(char));
+            if(!buffer){
+                fprintf(stderr, "Reallocation failed in read_line func\n");
+                exit(EXIT_FAILURE);
+            }
+            //buffer[i++] = ch; dont need this
+        }
+
+    }
+    buffer[i] = '\0';
+    return buffer;
+
+
+
+}
+
+#define TOKEN_BUFSIZE 64
+#define TOKEN_DELIM " \t\n\r\a"
+
+// returns an array of pointers, points to an array of pointers which they point to portions of commands
+char **split_line(char *line){
+    
+    int bufsize = TOKEN_BUFSIZE, i = 0;
+    // **tokens is an array of pointers in which we will store the pointers to the command portions in, tokens = [token 1 pointer, token2 pointer ..., NULL]
+
+    char **tokens = malloc(bufsize * sizeof(char *));
+    char *token;
+
+    if(!tokens){
+        fprintf(stderr, "Allocation failed in split_line()\n");
+        exit(EXIT_FAILURE);
+    }
+    
+    token = strtok(line, TOKEN_DELIM);
+    while(token != NULL){
+        tokens[i++] = token;
+        token = strtok(NULL, TOKEN_DELIM);
+        
+        if(i >= TOKEN_BUFSIZE){
+            bufsize += TOKEN_BUFSIZE;
+            tokens = realloc(tokens, bufsize * sizeof(char *));
+            
+            if(!tokens){
+                fprintf(stderr, "Reallocation failed in split_line()\n");
+                exit(EXIT_FAILURE);
+            }
+        }
+        
+
+    }
+
+    tokens[i] = NULL; // to end the array of pointers
+    return tokens;
+
+}
+
+int shell_launch(char **args){
+    pid_t pid, wpid;
+    int status;
+
+    pid = fork();
+
+    if(pid == 0){
+        // child process
+        execvp(args[0], args);
+    }
+    else{
+        // parent process
+        // make loop continue until either the child process gets exited normally or gets killed with a signal
+        
+        do{ // WUNTRACED: return even if the child is stopped (not just exited)
+            wpid = waitpid(pid, &status, WUNTRACED);
+        }while(!WIFEXITED(status) || WIFSIGNALED(status));
+
+    }
+
+    return 1;
+
+
+
+}
+
+int sh_cd(char **args);
+int sh_help(char **args);
+int sh_exit(char **args);
+
+// an array of string pointers , an array of pointers to char
+char *builtin_str[] = {
+    "cd",
+    "help",
+    "exit"
+};
+
+int (*builtin_func[])(char **) = {&sh_cd, &sh_help, &sh_exit};
+
+int sh_num_built_ins(){
+    return sizeof(builtin_str) / sizeof(char *);
+}
+
+
+
+
+// we pass it an array of poiners
+int shell_execute(char **args){
+    int i;
+    if(args[0] == NULL){
+        // empty comm
+        return 1;
+    }
+
+    for(i = 0; i < sh_num_built_ins(); i++){
+        // if the provided arguement was equal to one of the builtin strings
+        if(strcmp(args[0], builtin_str[i]) == 0){
+            return(builtin_func[i])(args); 
+            // this returns the function with the arg for example sh_cd(some_dir) -> cd dir
+        }
+    }
+    return shell_launch(args);
+}
+
+void shell_loop(){
+    char *line;
+    char **args;
+    int status;
+
+    do{
+        printf("> ");
+        line = read_line();
+        // split line returns an array of pointers args = [portion 1 pointer, portion2 pointer ...., NULL]
+        args = split_line(line);
+
+        status = shell_execute(args);
+        
+        free(line);
+        free(args);
+    
+
+    }while(status);
+
+    
+}
+int main(int argc, char **argv){
+
+
+
+    shell_loop();
+
+
+
+
+    return EXIT_SUCCESS;
+}
+// we pass it a pointer to other pointers that point to portions of the string we tokenized 
+int sh_cd(char **args){
+    if(args[1] == NULL){
+        fprintf(stderr, "sh_cd: Expected arguement to cd into\n");
+
+    }
+    else{
+        chdir(args[1]);
+        printf("Moved to %s \n", args[1]);
+    }
+    return 1;
+}
+int sh_help(char **args){
+    int i;
+    printf("Aram's experimental shell\n");
+    printf("The following are built in: \n");
+
+    for(int i = 0; i < sh_num_built_ins(); i++){
+        printf(" %s\n", builtin_str[i]);
+    }
+
+    return 1;
+
+
+}
+int sh_exit(char **args){
+    printf("Goodbye\n");
+    return 0;
+}
