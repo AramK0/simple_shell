@@ -120,7 +120,7 @@ char *builtin_str[] = {
     "cd",
     "help",
     "pwd",
-    "ls -la",
+    "ls",
     "exit"
 };
 
@@ -151,7 +151,9 @@ int shell_execute(char **args){
     }
     // if it wasnt one of the built in functions it tries to execute it as an eternal program with shell_launch()
     // if it is one of the built in commands it does NOT call execvp in shell_launch() and use execvp, child process
-    return shell_launch(args);
+    //return shell_launch(args);
+    printf("Invalid command\n");
+    return 1;
 }
 
 void shell_loop(){
@@ -235,8 +237,10 @@ int sh_help(char **args){
 }
 
 int sh_dir(char **args){
+    // pointer to directory stream 
     DIR *d;
 
+    // struct dirent is defined inside dirent.h lib 
     struct dirent *dir;
 
     d = opendir(".");
