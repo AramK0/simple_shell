@@ -4,6 +4,7 @@
 #include <unistd.h>
 #include <sys/types.h>
 #include <sys/wait.h>
+#include <dirent.h>
 
 #define MAX_SIZE 1064
 
@@ -112,17 +113,18 @@ int sh_cd(char **args);
 int sh_help(char **args);
 int sh_exit(char **args);
 int sh_cwd(char **args);
-
+int sh_dir(char **args);
 
 // an array of string pointers , an array of pointers to char
 char *builtin_str[] = {
     "cd",
     "help",
     "pwd",
+    "ls -la",
     "exit"
 };
 
-int (*builtin_func[])(char **) = {&sh_cd, &sh_help, &sh_cwd, &sh_exit};
+int (*builtin_func[])(char **) = {&sh_cd, &sh_help, &sh_cwd, &sh_dir, &sh_exit};
 
 int sh_num_built_ins(){
     return sizeof(builtin_str) / sizeof(char *);
@@ -141,11 +143,14 @@ int shell_execute(char **args){
 
     for(i = 0; i < sh_num_built_ins(); i++){
         // if the provided arguement was equal to one of the builtin strings
+        // chekcs if the provided arg is a built_in function , if so it returns it with the provided arg
         if(strcmp(args[0], builtin_str[i]) == 0){
             return(builtin_func[i])(args); 
             // this returns the function with the arg for example sh_cd(some_dir) -> cd dir
         }
     }
+    // if it wasnt one of the built in functions it tries to execute it as an eternal program with shell_launch()
+    // if it is one of the built in commands it does NOT call execvp in shell_launch() and use execvp, child process
     return shell_launch(args);
 }
 
@@ -191,7 +196,7 @@ int sh_cd(char **args){
     else if(chdir(args[1]) != 0){
         fprintf(stderr, "Invalid directory or does not exist.\n");
     }
-    else{
+    else if(chdir(args[1]) == 0){
         printf("Moved to %s \n", args[1]);
         printf("/%s>", args[1]);
 
@@ -228,6 +233,25 @@ int sh_help(char **args){
 
 
 }
+
+int sh_dir(char **args){
+    DIR *d;
+
+    struct dirent *dir;
+
+    d = opendir(".");
+
+    if(d){
+        while((dir = readdir(d)) != NULL){
+            printf("%s\n", dir->d_name);
+        }
+        closedir(d);
+    }
+    
+    return 1;
+
+}
+
 int sh_exit(char **args){
     printf("Goodbye\n");
     return 0;
