@@ -99,7 +99,7 @@ int shell_launch(char **args){
         
         do{ // WUNTRACED: return even if the child is stopped (not just exited)
             wpid = waitpid(pid, &status, WUNTRACED);
-        }while(!WIFEXITED(status) || WIFSIGNALED(status));
+        }while(!WIFEXITED(status) && WIFSIGNALED(status));
 
     }
 
