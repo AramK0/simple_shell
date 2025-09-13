@@ -99,7 +99,7 @@ int shell_launch(char **args){
         
         do{ // WUNTRACED: return even if the child is stopped (not just exited)
             wpid = waitpid(pid, &status, WUNTRACED);
-        }while(!WIFEXITED(status) && WIFSIGNALED(status));
+        }while(!WIFEXITED(status) && !WIFSIGNALED(status));
 
     }
 
@@ -180,6 +180,7 @@ int shell_execute(char **args){
 }
 
 void shell_loop(){
+    // store the returned pointer from read_line() into *line and returned double ptr from split_line() into **args
     char *line;
     char **args;
     int status;
@@ -213,7 +214,7 @@ int main(int argc, char **argv){
 }
 // we pass it a pointer to other pointers that point to portions of the string we tokenized 
 int sh_cd(char **args){
-    chdir(args[1]);
+    //chdir(args[1]);
     if(args[1] == NULL){
         fprintf(stderr, "sh_cd: Expected arguement to cd into\n");
 
@@ -222,7 +223,7 @@ int sh_cd(char **args){
         fprintf(stderr, "Invalid directory or does not exist.\n");
         return 1;
     }
-    else if(chdir(args[1]) == 0){
+    else{
         printf("Moved to %s \n", args[1]);
         printf("/%s>", args[1]);
 
