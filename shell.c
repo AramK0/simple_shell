@@ -114,6 +114,7 @@ int sh_help(char **args);
 int sh_exit(char **args);
 int sh_cwd(char **args);
 int sh_dir(char **args);
+int history(char **args);
 
 // an array of string pointers , an array of pointers to char
 char *builtin_str[] = {
@@ -121,16 +122,31 @@ char *builtin_str[] = {
     "help",
     "pwd",
     "ls",
+    "history",
     "exit"
 };
 
-int (*builtin_func[])(char **) = {&sh_cd, &sh_help, &sh_cwd, &sh_dir, &sh_exit};
+int (*builtin_func[])(char **) = {&sh_cd, &sh_help, &sh_cwd, &sh_dir, &history, &sh_exit};
+
+
 
 int sh_num_built_ins(){
     return sizeof(builtin_str) / sizeof(char *);
 }
 
+void write_hist(char *args){
+    FILE *file_io = fopen("history.txt", "a");
 
+    if(!file_io){
+        fprintf(stderr, "Error in write_hist()\n");
+        exit(EXIT_FAILURE);
+    }
+    fprintf(file_io, "%s\n", args);
+
+    fclose(file_io);
+
+    
+}
 
 
 // we pass it an array of poiners
@@ -145,9 +161,11 @@ int shell_execute(char **args){
         // if the provided arguement was equal to one of the builtin strings
         // chekcs if the provided arg is a built_in function , if so it returns it with the provided arg
         if(strcmp(args[0], builtin_str[i]) == 0){
+            write_hist(builtin_str[i]);
             return(builtin_func[i])(args); 
             // this returns the function with the arg for example sh_cd(some_dir) -> cd dir
         }
+       
     }
     // if it wasnt one of the built in functions it tries to execute it as an eternal program with shell_launch()
     // if it is one of the built in commands it does NOT call execvp in shell_launch() and use execvp, child process
@@ -168,7 +186,7 @@ void shell_loop(){
         args = split_line(line);
 
         status = shell_execute(args);
-        
+
         free(line);
         free(args);
     
@@ -180,8 +198,8 @@ void shell_loop(){
 int main(int argc, char **argv){
 
 
-
     shell_loop();
+
 
 
 
@@ -254,6 +272,20 @@ int sh_dir(char **args){
     
     return 1;
 
+}
+
+int history(char **args){
+    FILE *file_read = fopen("history.txt", "r");
+    char buffer[255];
+
+    while((fgets(buffer, 255, file_read)) != NULL){
+        
+        printf("%s", buffer);
+    }
+
+    fclose(file_read);
+
+    return 1;
 }
 
 int sh_exit(char **args){
