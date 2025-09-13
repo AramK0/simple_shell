@@ -161,7 +161,7 @@ int shell_execute(char **args){
         // if the provided arguement was equal to one of the builtin strings
         // chekcs if the provided arg is a built_in function , if so it returns it with the provided arg
         if(strcmp(args[0], builtin_str[i]) == 0){
-            write_hist(builtin_str[i]);
+            write_hist(args[0]);
             return(builtin_func[i])(args); 
             // this returns the function with the arg for example sh_cd(some_dir) -> cd dir
         }
