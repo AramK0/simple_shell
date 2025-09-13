@@ -135,7 +135,12 @@ int sh_num_built_ins(){
 }
 
 void write_hist(char *args){
-    FILE *file_io = fopen("history.txt", "a");
+    // HOME  is a standard unit env variable for users home dir path
+    char *home = getenv("HOME");
+    // snprintf is like printf but writes to a string instead of stdout 
+    char filepath[1024];
+    snprintf(filepath, sizeof(filepath), "%s/shell_c/.history.txt", home);
+    FILE *file_io = fopen(filepath, "a");
 
     if(!file_io){
         fprintf(stderr, "Error in write_hist()\n");
@@ -215,6 +220,7 @@ int sh_cd(char **args){
     }
     else if(chdir(args[1]) != 0){
         fprintf(stderr, "Invalid directory or does not exist.\n");
+        return 1;
     }
     else if(chdir(args[1]) == 0){
         printf("Moved to %s \n", args[1]);
@@ -242,6 +248,7 @@ int sh_cwd(char **args){
 
 int sh_help(char **args){
     int i;
+    printf("****************************************\n");
     printf("Aram's experimental shell\n");
     printf("The following are built in: \n");
 
@@ -275,7 +282,10 @@ int sh_dir(char **args){
 }
 
 int history(char **args){
-    FILE *file_read = fopen("history.txt", "r");
+    char *home = getenv("HOME");
+    char filepath[1024];
+    snprintf(filepath, sizeof(filepath), "%s/shell_c/.history.txt", home);
+    FILE *file_read = fopen(filepath, "r");
     char buffer[255];
 
     while((fgets(buffer, 255, file_read)) != NULL){
