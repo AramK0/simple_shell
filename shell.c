@@ -182,13 +182,15 @@ int shell_execute(char **args){
 }
 
 void shell_loop(){
+    char buffer[255];
     // store the returned pointer from read_line() into *line and returned double ptr from split_line() into **args
     char *line;
     char **args;
     int status;
 
     do{
-        printf("> ");
+        getcwd(buffer, sizeof(buffer));
+        printf("%s> ", buffer);
         line = read_line();
         // split line returns an array of pointers args = [portion 1 pointer, portion2 pointer ...., NULL]
         args = split_line(line);
