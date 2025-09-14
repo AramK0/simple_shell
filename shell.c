@@ -126,6 +126,8 @@ char *builtin_str[] = {
     "exit"
 };
 
+// function pointer allows you to indirectly call the function with the pointer 
+// we use an array of pointers to functions because we have more than one function to point to with this func pointer, and the & is optional in this case
 int (*builtin_func[])(char **) = {&sh_cd, &sh_help, &sh_cwd, &sh_dir, &history, &sh_exit};
 
 
@@ -225,7 +227,7 @@ int sh_cd(char **args){
     }
     else{
         printf("Moved to %s \n", args[1]);
-        printf("/%s>", args[1]);
+        printf("/%s>\n", args[1]);
 
 
     }
