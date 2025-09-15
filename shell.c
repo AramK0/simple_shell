@@ -4,6 +4,7 @@
 #include <unistd.h>
 #include <sys/types.h>
 #include <sys/wait.h>
+#include <sys/stat.h>
 #include <dirent.h>
 
 #define MAX_SIZE 1064
@@ -308,9 +309,19 @@ int history(char **args){
 int cat_file(char **args){
     FILE *file_ptr = fopen(args[1], "r");
     char buffer[255];
+    struct stat file_stat;
 
     if(args[1] == NULL){
         fprintf(stderr, "No argument provided\n");
+        return 1;
+    }
+    
+    if(stat(args[1], &file_stat) != 0){
+        perror("Stat failed\n");
+        return 1;
+    }
+    if(S_ISDIR(file_stat.st_mode)){
+        fprintf(stderr, "%s is a directory and not a file\n", args[1]);
         return 1;
     }
 
@@ -320,8 +331,9 @@ int cat_file(char **args){
     printf("\n");
     return 1;
 
-}
-
+        
+    }
+    
 
 int sh_exit(char **args){
     printf("Goodbye\n");
