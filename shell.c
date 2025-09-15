@@ -115,6 +115,7 @@ int sh_exit(char **args);
 int sh_cwd(char **args);
 int sh_dir(char **args);
 int history(char **args);
+int cat_file(char **args);
 
 // an array of string pointers , an array of pointers to char
 char *builtin_str[] = {
@@ -123,12 +124,13 @@ char *builtin_str[] = {
     "pwd",
     "ls",
     "history",
+    "cat",
     "exit"
 };
 
 // function pointer allows you to indirectly call the function with the pointer 
 // we use an array of pointers to functions because we have more than one function to point to with this func pointer, and the & is optional in this case
-int (*builtin_func[])(char **) = {&sh_cd, &sh_help, &sh_cwd, &sh_dir, &history, &sh_exit};
+int (*builtin_func[])(char **) = {&sh_cd, &sh_help, &sh_cwd, &sh_dir, &history, &cat_file, &sh_exit};
 
 
 
@@ -212,8 +214,6 @@ int main(int argc, char **argv){
 
 
 
-
-
     return EXIT_SUCCESS;
 }
 // we pass it a pointer to other pointers that point to portions of the string we tokenized 
@@ -229,7 +229,6 @@ int sh_cd(char **args){
     }
     else{
         printf("Moved to %s \n", args[1]);
-        printf("/%s>\n", args[1]);
 
 
     }
@@ -260,6 +259,9 @@ int sh_help(char **args){
     for(int i = 0; i < sh_num_built_ins(); i++){
         printf(" %s\n", builtin_str[i]);
     }
+
+    printf("****************************************\n");
+
 
     return 1;
 
@@ -302,6 +304,24 @@ int history(char **args){
 
     return 1;
 }
+
+int cat_file(char **args){
+    FILE *file_ptr = fopen(args[1], "r");
+    char buffer[255];
+
+    if(args[1] == NULL){
+        fprintf(stderr, "No argument provided\n");
+        return 1;
+    }
+
+    while((fgets(buffer, sizeof(buffer), file_ptr)) != NULL){
+        printf("%s", buffer);
+    }
+    printf("\n");
+    return 1;
+
+}
+
 
 int sh_exit(char **args){
     printf("Goodbye\n");
